@@ -1,0 +1,19 @@
+{
+  "name": "discord-bot",
+  "version": "1.0.0",
+  "main": "src/app.ts",
+  "repository": "git@github.com:4nd2in/discord-bot.git",
+  "author": "4nd2in",
+  "license": "MIT",
+  "scripts": {
+    "start": "rm -rf && tsc && node ./bin/app.js",
+    "test": "yarn run eslint && yarn run build"
+  },
+  "dependencies": {
+    "@types/node": "^16.0.1",
+    "typescript": "^4.3.5"
+  },
+  "devDependencies": {
+    "ts-node": "^10.0.0"
+  }
+}
