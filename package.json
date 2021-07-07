@@ -6,12 +6,14 @@
   "author": "4nd2in",
   "license": "MIT",
   "scripts": {
+    "build": "yarn run tsc",
     "start": "rm -rf && tsc && node ./bin/app.js",
     "test": "yarn run eslint && yarn run build"
   },
   "dependencies": {
     "@types/node": "^16.0.1",
     "discord.js": "^12.5.3",
+    "eslint": "^7.30.0",
     "typescript": "^4.3.5"
   },
   "devDependencies": {
