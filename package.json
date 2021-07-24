@@ -5,15 +5,63 @@
   "repository": "git@github.com:4nd2in/discord-bot.git",
   "author": "4nd2in",
   "license": "MIT",
+  "type": "module",
   "scripts": {
-    "build": "yarn run tsc",
-    "start": "rm -rf && tsc && node ./bin/app.js",
-    "test": "yarn run eslint && yarn run build"
+    "build": "rm -rf dist && yarn run tsc",
+    "start": "rm -rf dist && yarn run build && node ./dist/app.js",
+    "test": "yarn run eslint && yarn run build",
+    "lint": "eslint --ext ts --report-unused-disable-directives --format visualstudio --max-warnings 0 src",
+    "lint-fix": "eslint --ext ts --report-unused-disable-directives --fix --format visualstudio src"
+  },
+  "eslintConfig": {
+    "parser": "@typescript-eslint/parser",
+    "parserOptions": {
+      "project": "tsconfig.eslint.json",
+      "sourceType": "module"
+    },
+    "plugins": [
+      "@typescript-eslint",
+      "sonarjs"
+    ],
+    "extends": [
+      "eslint:recommended",
+      "plugin:@typescript-eslint/eslint-recommended",
+      "plugin:@typescript-eslint/recommended",
+      "plugin:@typescript-eslint/recommended-requiring-type-checking",
+      "plugin:prettier/recommended",
+      "plugin:sonarjs/recommended"
+    ],
+    "rules": {
+      "no-unused-expressions": "error",
+      "eqeqeq": [
+        "error",
+        "always"
+      ],
+      "quotes": [
+        "error",
+        "double",
+        {
+          "allowTemplateLiterals": true
+        }
+      ]
+    }
   },
   "dependencies": {
     "@types/node": "^16.0.1",
+    "@typescript-eslint/eslint-plugin": "^2.7.0",
+    "@typescript-eslint/parser": "^2.7.0",
+    "bufferutil": "^4.0.1",
     "discord.js": "^12.5.3",
+    "dotenv": "^10.0.0",
     "eslint": "^7.30.0",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-config-standard": "^16.0.3",
+    "eslint-plugin-prettier": "^3.1.1",
+    "eslint-plugin-promise": "^4.2.1",
+    "eslint-plugin-sonarjs": "^0.4.0",
+    "eslint-plugin-standard": "^4.0.1",
+    "prettier": "^2.3.2",
+    "sonar-scanner": "^3.1.0",
     "typescript": "^4.3.5"
   },
   "devDependencies": {
