@@ -9,7 +9,7 @@
   "private": true,
   "scripts": {
     "build": "rm -rf dist && yarn run tsc",
-    "start": "rm -rf dist && yarn run build && node ./dist/app.js",
+    "start": "yarn run build && node ./dist/app.js",
     "test": "yarn run lint && yarn run build",
     "lint": "eslint --ext ts --report-unused-disable-directives --format visualstudio --max-warnings 0 src",
     "lint-fix": "eslint --ext ts --report-unused-disable-directives --fix --format visualstudio src"
