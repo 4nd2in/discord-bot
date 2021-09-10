@@ -1,7 +1,7 @@
-import Discord from "discord.js";
+import { Message } from "discord.js";
 
 export interface Command {
   name: string;
   description: string;
-  execute(message: Discord.Message, args: string[] | undefined): void;
+  execute(message: Message, args: string[] | undefined): void;
 }

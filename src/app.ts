@@ -1,8 +1,8 @@
 import dotenv from "dotenv";
-import Discord from "discord.js";
+import { Client, Intents } from "discord.js";
 import { handleOnMessage } from "./helper/handleOnMessage";
 
-const client = new Discord.Client();
+const client = new Client({ intents: [Intents.FLAGS.GUILDS] });
 
 dotenv.config();
 

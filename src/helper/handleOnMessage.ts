@@ -1,10 +1,10 @@
-import Discord from "discord.js";
+import { Collection, Message } from "discord.js";
 import fs from "fs";
 import { Command } from "src/commands/Command";
 import { config } from "src/config";
 import { handleError } from "./handleError";
 
-const commands = new Discord.Collection<string, Command>();
+const commands = new Collection<string, Command>();
 
 const commandFiles = fs
   .readdirSync("./commands")
@@ -16,7 +16,7 @@ for (const file of commandFiles) {
   commands.set(command.name, command);
 }
 
-export const handleOnMessage = (message: Discord.Message): void => {
+export const handleOnMessage = (message: Message): void => {
   if (!message.content.startsWith(config.prefix) || message.author.bot) return;
 
   const args = message.content.slice(config.prefix.length).trim().split(/ +/);
