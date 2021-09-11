@@ -1,9 +1,7 @@
 import { Interaction } from "discord.js";
 import { commands } from "../helper/commands.js";
 
-export const onInteractionCreate = async (
-  interaction: Interaction
-): Promise<void> => {
+const onInteractionCreate = async (interaction: Interaction): Promise<void> => {
   if (!interaction.isCommand()) return;
 
   const command = commands.get(interaction.commandName);
@@ -17,4 +15,12 @@ export const onInteractionCreate = async (
       ephemeral: true,
     });
   }
+};
+
+export default {
+  name: "interactionCreate",
+  once: false,
+  execute(interaction: Interaction): void {
+    onInteractionCreate(interaction);
+  },
 };

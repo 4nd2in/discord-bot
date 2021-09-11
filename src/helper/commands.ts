@@ -1,6 +1,6 @@
 import fs from "fs";
 import { Collection } from "discord.js";
-import { Command } from "./Command.js";
+import { Command } from "../interfaces/Command.js";
 
 const collection = new Collection<string, Command>();
 const commandFiles = fs.readdirSync("./dist/commands");
