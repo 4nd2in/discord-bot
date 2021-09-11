@@ -1,10 +1,9 @@
 import dotenv from "dotenv";
 import { Client, Intents, Interaction } from "discord.js";
-import { onInteractionCreate } from "./helper/onInteractionCreate.js";
-
-const client = new Client({ intents: [Intents.FLAGS.GUILDS] });
+import { onInteractionCreate } from "./events/onInteractionCreate.js";
 
 dotenv.config();
+const client = new Client({ intents: [Intents.FLAGS.GUILDS] });
 
 client.once("ready", () => {
   console.log("ready");
