@@ -10,7 +10,7 @@
   "scripts": {
     "build": "rm -rf dist && yarn run tsc",
     "start": "yarn run build && node ./dist/app.js",
-    "deploy": "node ./dist/commands/deploy.js",
+    "deploy": "yarn run build && node ./dist/helper/deploy.js",
     "test": "yarn run lint && yarn run build",
     "lint": "eslint --ext ts --report-unused-disable-directives --format visualstudio --max-warnings 0 src",
     "lint-fix": "eslint --ext ts --report-unused-disable-directives --fix --format visualstudio src"
