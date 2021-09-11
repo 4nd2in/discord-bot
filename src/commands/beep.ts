@@ -1,6 +1,6 @@
 import { SlashCommandBuilder } from "@discordjs/builders";
 import { Interaction } from "discord.js";
-import { Command } from "src/helper/Command";
+import { Command } from "src/interfaces/Command";
 
 export default {
   data: new SlashCommandBuilder()
