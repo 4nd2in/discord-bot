@@ -2,7 +2,7 @@ import dotenv from "dotenv";
 import { REST } from "@discordjs/rest";
 import { Routes } from "discord-api-types/v9";
 import { config } from "../config.js";
-import { commands } from "./commandHandler.js";
+import { commands } from "./commands.js";
 
 dotenv.config();
 if (process.env.TOKEN) {

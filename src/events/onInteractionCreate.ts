@@ -1,5 +1,5 @@
 import { Interaction } from "discord.js";
-import { commands } from "../helper/commandHandler.js";
+import { commands } from "../helper/commands.js";
 
 export const onInteractionCreate = async (
   interaction: Interaction
