@@ -1,6 +1,6 @@
 import dotenv from "dotenv";
-import { Client, Intents } from "discord.js";
-import { handleOnMessage } from "./helper/handleOnMessage";
+import { Client, Intents, Interaction } from "discord.js";
+import { onInteractionCreate } from "./helper/onInteractionCreate.js";
 
 const client = new Client({ intents: [Intents.FLAGS.GUILDS] });
 
@@ -10,6 +10,9 @@ client.once("ready", () => {
   console.log("ready");
 });
 
-client.on("message", (message) => handleOnMessage(message));
+client.on(
+  "interactionCreate",
+  async (interaction: Interaction) => await onInteractionCreate(interaction)
+);
 
 client.login(process.env.TOKEN);
