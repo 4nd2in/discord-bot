@@ -1,17 +1,21 @@
 import dotenv from "dotenv";
-import { Client, Intents, Interaction } from "discord.js";
-import { onInteractionCreate } from "./events/onInteractionCreate.js";
+import fs from "fs";
+import { Client, Intents } from "discord.js";
 
 dotenv.config();
 const client = new Client({ intents: [Intents.FLAGS.GUILDS] });
 
-client.once("ready", () => {
-  console.log("ready");
-});
+const eventFiles = fs.readdirSync("./dist/events");
 
-client.on(
-  "interactionCreate",
-  async (interaction: Interaction) => await onInteractionCreate(interaction)
-);
+eventFiles.forEach((file) => {
+  import(`./events/${file}`).then((object) => {
+    const event = object.default;
+    if (event.once) {
+      client.once(event.name, (...args) => event.execute(...args));
+    } else {
+      client.on(event.name, (...args) => event.execute(...args));
+    }
+  });
+});
 
 client.login(process.env.TOKEN);
