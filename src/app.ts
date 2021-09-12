@@ -1,9 +1,12 @@
 import dotenv from "dotenv";
 import fs from "fs";
 import { Client, Intents } from "discord.js";
+import { defineReactionRole } from "./database/DatabaseManager";
 
 dotenv.config();
 const client = new Client({ intents: [Intents.FLAGS.GUILDS] });
+
+defineReactionRole();
 
 const eventFiles = fs.readdirSync("./dist/events");
 
