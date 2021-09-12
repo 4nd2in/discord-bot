@@ -7,6 +7,7 @@ export const defineReactionRole = (): void => {
       type: DataTypes.UUID,
       defaultValue: DataTypes.UUIDV4,
     },
+    channel: DataTypes.STRING,
     message: DataTypes.STRING,
     reaction: DataTypes.STRING,
     role: DataTypes.STRING,
