@@ -30,7 +30,7 @@ git clone https://github.com/4nd2in/discord-bot.git
 
 ---
 
-To run this project you need [Node.js](https://nodejs.org/en/) `v16.6.0` or higher installed. If you are new to [Discord.js](https://discord.js.org/#/) have a look at [Discord.js Guide](https://discordjs.guide/) which is very helful for getting started.
+To run this project you need [Node.js](https://nodejs.org/en/) `v16.6.0` or higher installed. If you are new to [Discord.js](https://discord.js.org/#/) have a look at [Discord.js Guide](https://discordjs.guide/) which is very helpful for getting started.
 
 ---
 
