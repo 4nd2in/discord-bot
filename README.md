@@ -26,7 +26,7 @@ To remove an existing reaction role:
 Clone the project:  
 `git clone https://github.com/4nd2in/discord-bot.git`
 To run this project you need [Node.js](https://nodejs.org/en/) `v16.6.0` or higher installed. If you are new to [Discord.js](https://discord.js.org/#/) have a look at [Discord.js Guide](https://discordjs.guide/) which is very helful for getting started.  
-This project is using yarn. If you are using `npm` run this to install yarn:  
+This project is using yarn. Run this to install it via `npm`:  
 `npm install --global yarn`  
 After that install the needed packages:  
 `yarn install`  
