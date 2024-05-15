@@ -3,7 +3,7 @@
     "build": "eslint 'src/**/*.ts'; tsc",
     "lint": "eslint 'src/**/*.ts' --fix",
     "start": "node ./bin/index.js",
-    "watch": "concurrently \"tsc --watch\" \"nodemon ./bin/index.js\""
+    "watch": "concurrently \"tsc --watch\" \"nodemon ./bin/index.js --ignore ./data\""
   },
   "devDependencies": {
     "@eslint/js": "^9.2.0",
@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "discord.js": "^14.15.2",
-    "dotenv": "^16.4.5"
+    "dotenv": "^16.4.5",
+    "node-json-db": "^2.3.0"
   }
 }
