@@ -3,7 +3,8 @@
     "build": "eslint 'src/**/*.ts'; tsc",
     "lint": "eslint 'src/**/*.ts' --fix",
     "start": "node ./bin/index.js",
-    "watch": "concurrently \"tsc --watch\" \"nodemon ./bin/index.js --ignore ./data\""
+    "watch": "concurrently \"tsc --watch\" \"nodemon ./bin/index.js --ignore ./data\"",
+    "clean": "rm -rf ./bin/*"
   },
   "devDependencies": {
     "@eslint/js": "^9.2.0",
