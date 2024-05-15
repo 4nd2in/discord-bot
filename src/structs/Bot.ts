@@ -9,31 +9,40 @@ import {
 } from "discord.js";
 import { readdirSync } from "fs";
 import { join } from "path";
-import config from "../config";
-import { Command } from "../interfaces/command";
+import { config } from "../config";
+import { db } from "../db/db";
+import { Command } from "../interfaces/Command";
+import { SlimGuild } from "../interfaces/SlimGuild";
 
 export class Bot {
     slashCommands = new Array<ApplicationCommandDataResolvable>();
     slashCommandsMap = new Collection<string, Command>();
-    private guildIds = new Array<string>;
 
     constructor(public readonly client: Client) {
         client.login(config.token);
-        client.once(Events.ClientReady, () => {
-            console.info(`${client.user!.username} ready!`);
-            this.registerSlashCommand();
-        });
+
+        this.onReady();
+        this.onGuildCreate();
+        this.onGuildDelete();
+        this.onInteractionCreate();
 
         client.on(Events.Warn, (info) => console.warn(info));
         client.on(Events.Error, console.error);
+    }
 
-        this.onInteractionCreate();
+    private async onReady() {
+        this.client.once(Events.ClientReady, async () => {
+            this.registerSlashCommand();
+            const guilds = await db.getObjectDefault<Array<SlimGuild>>("/guilds", []);
+            console.info("Guilds:");
+            guilds.forEach((guild) => console.info(guild));
+            console.info(`${this.client.user!.username} ready!`);
+        });
     }
 
     private async registerSlashCommand() {
-        const rest = new REST({ version: "9" }).setToken(config.token);
-        const commandFiles = readdirSync(join(__dirname, "..", "commands"))
-            .filter((file) => !file.endsWith(".map"));
+        const rest = new REST({ version: "10" }).setToken(config.token);
+        const commandFiles = readdirSync(join(__dirname, "..", "commands"));
 
         for (const file of commandFiles) {
             const imported = await import(join(__dirname, "..", "commands", `${file}`));
@@ -41,20 +50,34 @@ export class Bot {
             this.slashCommandsMap.set(imported.command.data.name, imported.command);
         }
 
-        for (const guildId in this.guildIds) {
-            await rest.put(
-                Routes.applicationGuildCommands(this.client.user?.id || "missing id", guildId),
-                { body: this.slashCommands }
-            );
-        }
+        await rest
+            .put(Routes.applicationCommands(this.client.user!.id), { body: this.slashCommands })
+            .catch(console.error);
     }
 
     private async onInteractionCreate() {
         this.client.on(Events.InteractionCreate, async (interaction: Interaction) => {
+            console.info("Handling incoming interaction");
             if (interaction.isCommand()) {
                 const command = this.slashCommandsMap.get(interaction.commandName);
                 await command?.run(interaction);
             }
+        });
+    }
+
+    private async onGuildCreate() {
+        this.client.on(Events.GuildCreate, async (guild) => {
+            console.info(`Entered new guild: ${guild.id}`);
+            const slimGuild = { id: guild.id, name: guild.name };
+            await db.push("/guilds[]", slimGuild).catch(console.error);
+        });
+    }
+
+    private async onGuildDelete() {
+        this.client.on(Events.GuildDelete, async (guild) => {
+            console.info(`Deleted from guild: ${guild.id}`);
+            const index = await db.getIndex("/guilds", guild.id).catch(console.error);
+            await db.delete(`/guilds[${index}]`).catch(console.error);
         });
     }
 };
