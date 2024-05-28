@@ -1,19 +1,33 @@
 import {
     CacheType,
+    ChannelType,
     ChatInputCommandInteraction,
     CommandInteraction,
     CommandInteractionOptionResolver,
     EmbedBuilder,
     SlashCommandBuilder
 } from "discord.js";
-import { db } from "../db/db";
+import { addBirthday, deleteBirthdayOfUser, getBirthdayOfUser, getBirthdaysOfGuild, setBirthdayResponseChannel } from "../db/helper/birthdaysHelper";
 import { Birthday } from "../interfaces/Birthday";
 import { Command } from "../interfaces/Command";
+import { createBirthdayJob } from "../jobs/birthdayJob";
+import { calculateAge } from "../utils/birthdayUtil";
 
 const birthday: Command = {
     data: new SlashCommandBuilder()
         .setName("birthday")
         .setDescription("Handle birthdays")
+        .addSubcommand(subcommand =>
+            subcommand
+                .setName("set_channel")
+                .setDescription("Sets the channel to which notifications are being sent. If unset, no message will be sent.")
+                .addChannelOption(option =>
+                    option
+                        .setName("channel")
+                        .setDescription("Channel to send congratulations to.")
+                        .setRequired(true)
+                )
+        )
         .addSubcommand(subcommand =>
             subcommand
                 .setName("add")
@@ -55,13 +69,39 @@ const birthday: Command = {
         ),
     run: async (interaction: CommandInteraction<CacheType>) => {
         const options = (interaction as ChatInputCommandInteraction).options;
-        if (options.getSubcommand() === "add")
-            await handleAdd(interaction, options);
-        if (options.getSubcommand() === "show")
-            await handleShow(interaction, options);
-        if (options.getSubcommand() === "remove")
-            await handleRemove(interaction, options);
+        switch (options.getSubcommand()) {
+            case "set_channel":
+                return await handleSetChannel(interaction, options);
+            case "add":
+                return await handleAdd(interaction, options);
+            case "show":
+                return await handleShow(interaction, options);
+            case "remove":
+                return await handleRemove(interaction, options);
+            default:
+                await interaction.reply("I don't know this command :(");
+        }
     }
+};
+
+const handleSetChannel = async (
+    interaction: CommandInteraction,
+    options: Omit<CommandInteractionOptionResolver<CacheType>, "getMessage" | "getFocused">
+) => {
+    const channel = options.getChannel("channel");
+
+    if (!channel || channel.type != ChannelType.GuildText) {
+        await interaction.reply("Please enter a text channel").catch(console.error);
+        return;
+    }
+
+    if (!interaction.guildId) {
+        await interaction.reply("Could not find guild").catch(console.error);
+        return;
+    }
+
+    await setBirthdayResponseChannel(interaction.guildId, channel.id);
+    await interaction.reply(`Set <#${channel.id}> as birthday response channel`);
 };
 
 const handleAdd = async (
@@ -81,6 +121,11 @@ const handleAdd = async (
         return;
     }
 
+    if (!interaction.guildId) {
+        await interaction.reply("Could not find guild").catch(console.error);
+        return;
+    }
+
     try {
         const parsedDate = new Date(date);
         const age = calculateAge(parsedDate);
@@ -90,7 +135,9 @@ const handleAdd = async (
             username: user.displayName,
             date: parsedDate
         };
-        await db.push(`/${interaction.guildId}/birthdays[]`, birthday);
+        await addBirthday(interaction.guildId, birthday);
+        const job = createBirthdayJob(interaction.guildId, birthday);
+        job.start()
 
         await interaction.reply(
             `Added birthday for ${user.displayName}, age: ${age}`
@@ -101,37 +148,19 @@ const handleAdd = async (
     }
 };
 
-const calculateAge = (birthdate: Date): number => {
-    const today = new Date();
-
-    let age = today.getFullYear() - birthdate.getFullYear();
-    const monthDifference = today.getMonth() - birthdate.getMonth();
-    const dayDifference = today.getDate() - birthdate.getDate();
-
-    if (monthDifference < 0 || (monthDifference === 0 && dayDifference < 0)) {
-        age--;
-    }
-
-    return age;
-};
-
 const handleShow = async (
     interaction: CommandInteraction,
     options: Omit<CommandInteractionOptionResolver<CacheType>, "getMessage" | "getFocused">
 ) => {
     const user = options.getUser("user");
+
+    if (!interaction.guildId) {
+        await interaction.reply("Could not find guild").catch(console.error);
+        return;
+    }
+
     if (user) {
-        const index = await db.getIndex(`/${interaction.guildId}/birthdays`, user.id)
-            .catch(console.error);
-
-        if (index === -1) {
-            await interaction.reply(`Could not find birthday of ${user.displayName}`)
-                .catch(console.error);
-            return;
-        }
-
-        const birthday = await db
-            .getObjectDefault<Birthday>(`/${interaction.guildId}/birthdays[${index}]`, undefined);
+        const birthday = await getBirthdayOfUser(interaction.guildId, user.id);
 
         if (!birthday) {
             await interaction.reply(`Could not find birthday of ${user.displayName}`)
@@ -144,8 +173,7 @@ const handleShow = async (
             .catch(console.error)
             ;
     } else {
-        const birthdays = await db
-            .getObjectDefault<Array<Birthday>>(`/${interaction.guildId}/birthdays`, []);
+        const birthdays = await getBirthdaysOfGuild(interaction.guildId);
 
         if (birthdays.length === 0) {
             await interaction.reply("My database is currently empty :(").catch(console.error);
@@ -180,9 +208,12 @@ const handleRemove = async (
         return;
     }
 
-    const index = await db.getIndex(`/${interaction.guildId}/birthdays`, user.id)
-        .catch(console.error);
-    await db.delete(`/${interaction.guildId}/birthdays[${index}]`).catch(console.error);
+    if (!interaction.guildId) {
+        await interaction.reply("Could not find guild").catch(console.error);
+        return;
+    }
+
+    await deleteBirthdayOfUser(interaction.guildId, user.id);
     await interaction.reply(`Removed ${user.displayName} from birthday list.`)
         .catch(console.error);
 };

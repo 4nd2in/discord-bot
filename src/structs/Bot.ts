@@ -10,9 +10,8 @@ import {
 import { readdirSync } from "fs";
 import { join } from "path";
 import { config } from "../config";
-import { db } from "../db/db";
+import { deleteGuild, getGuilds, setGuild } from "../db/helper/guildsHelper";
 import { Command } from "../interfaces/Command";
-import { SlimGuild } from "../interfaces/SlimGuild";
 
 export class Bot {
     slashCommands = new Array<ApplicationCommandDataResolvable>();
@@ -33,7 +32,7 @@ export class Bot {
     private async onReady() {
         this.client.once(Events.ClientReady, async () => {
             this.registerSlashCommand();
-            const guilds = await db.getObjectDefault<Array<SlimGuild>>("/guilds", []);
+            const guilds = await getGuilds();
             console.info("Guilds:");
             guilds.forEach((guild) => console.info(guild));
             console.info(`${this.client.user!.username} ready!`);
@@ -69,15 +68,14 @@ export class Bot {
         this.client.on(Events.GuildCreate, async (guild) => {
             console.info(`Entered new guild: ${guild.id}`);
             const slimGuild = { id: guild.id, name: guild.name };
-            await db.push("/guilds[]", slimGuild).catch(console.error);
+            await setGuild(slimGuild);
         });
     }
 
     private async onGuildDelete() {
         this.client.on(Events.GuildDelete, async (guild) => {
             console.info(`Deleted from guild: ${guild.id}`);
-            const index = await db.getIndex("/guilds", guild.id).catch(console.error);
-            await db.delete(`/guilds[${index}]`).catch(console.error);
+            await deleteGuild(guild.id);
         });
     }
 };
