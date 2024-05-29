@@ -7,10 +7,12 @@ import {
     EmbedBuilder,
     SlashCommandBuilder
 } from "discord.js";
-import { addBirthday, deleteBirthdayOfUser, getBirthdayOfUser, getBirthdaysOfGuild, setBirthdayResponseChannel } from "../db/helper/birthdaysHelper";
+import { bot } from "..";
+import { dbAddBirthday, dbDeleteBirthdayOfUser, dbGetBirthdayOfUser, dbGetBirthdaysOfGuild, dbSetBirthdayResponseChannel } from "../db/helper/birthdaysHelper";
+import { dbAddJob, dbDeleteJob } from "../db/helper/jobsHelper";
 import { Birthday } from "../interfaces/Birthday";
 import { Command } from "../interfaces/Command";
-import { createBirthdayJob } from "../jobs/birthdayJob";
+import { createBirthdayJob } from "../jobs/createBirthdayJob";
 import { calculateAge } from "../utils/birthdayUtil";
 
 const birthday: Command = {
@@ -100,7 +102,7 @@ const handleSetChannel = async (
         return;
     }
 
-    await setBirthdayResponseChannel(interaction.guildId, channel.id);
+    await dbSetBirthdayResponseChannel(interaction.guildId, channel.id);
     await interaction.reply(`Set <#${channel.id}> as birthday response channel`);
 };
 
@@ -135,9 +137,10 @@ const handleAdd = async (
             username: user.displayName,
             date: parsedDate
         };
-        await addBirthday(interaction.guildId, birthday);
-        const job = createBirthdayJob(interaction.guildId, birthday);
-        job.start()
+        await dbAddBirthday(interaction.guildId, birthday);
+        const jobData = createBirthdayJob(interaction.guildId, birthday);
+        await dbAddJob(jobData);
+        bot.startJob(jobData);
 
         await interaction.reply(
             `Added birthday for ${user.displayName}, age: ${age}`
@@ -160,7 +163,7 @@ const handleShow = async (
     }
 
     if (user) {
-        const birthday = await getBirthdayOfUser(interaction.guildId, user.id);
+        const birthday = await dbGetBirthdayOfUser(interaction.guildId, user.id);
 
         if (!birthday) {
             await interaction.reply(`Could not find birthday of ${user.displayName}`)
@@ -173,7 +176,7 @@ const handleShow = async (
             .catch(console.error)
             ;
     } else {
-        const birthdays = await getBirthdaysOfGuild(interaction.guildId);
+        const birthdays = await dbGetBirthdaysOfGuild(interaction.guildId);
 
         if (birthdays.length === 0) {
             await interaction.reply("My database is currently empty :(").catch(console.error);
@@ -213,7 +216,9 @@ const handleRemove = async (
         return;
     }
 
-    await deleteBirthdayOfUser(interaction.guildId, user.id);
+    await dbDeleteBirthdayOfUser(interaction.guildId, user.id);
+    await bot.stopJob(user.id);
+    await dbDeleteJob(user.id);
     await interaction.reply(`Removed ${user.displayName} from birthday list.`)
         .catch(console.error);
 };
