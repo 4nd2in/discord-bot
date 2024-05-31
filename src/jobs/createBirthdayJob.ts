@@ -8,7 +8,7 @@ export const createBirthdayJob = (guildId: string, birthday: Birthday): CronJobD
         id: birthday.id,
         // js date month range is 0-11 so we have to add 1
         // cron: second, minute, hour, day of month, month, day of week
-        cronTime: `* * * ${birthday.date.getDate()} ${birthday.date.getMonth() + 1} *`,
+        cronTime: `0 0 8 ${birthday.date.getDate()} ${birthday.date.getMonth() + 1} *`,
         onTick: `
         // THIS GETS EXECUTED IN BOT SCOPE, NEEDS TO BE JS NOT TS
         async () => {
