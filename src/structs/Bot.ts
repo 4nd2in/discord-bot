@@ -11,10 +11,11 @@ import {
 import { readdirSync } from "fs";
 import { join } from "path";
 import { config } from "../config";
-import { dbAddGuild, dbDeleteGuild, dbGetGuilds } from "../db/helper/guildsHelper";
+import { dbCreateOrUpdateGuild, dbDeleteGuild, dbGetGuilds } from "../db/helper/guildsHelper";
 import { dbGetJobs } from "../db/helper/jobsHelper";
 import { Command } from "../interfaces/Command";
 import { CronJobData } from "../interfaces/CronJobData";
+import { JoinedGuild } from "../interfaces/JoinedGuild";
 
 export class Bot {
     slashCommands = new Array<ApplicationCommandDataResolvable>();
@@ -34,7 +35,11 @@ export class Bot {
     }
 
     async startJob(jobData: CronJobData) {
-        const job = CronJob.from(jobData.data);
+        const job = CronJob.from({
+            cronTime: jobData.cronTime,
+            onTick: eval(jobData.onTick),
+            start: false
+        });
         job.start();
         this.activeJobsMap.set(jobData.id, job);
         console.debug(`Started job ${jobData.id} running: ${job.running}`);
@@ -94,8 +99,13 @@ export class Bot {
     private async onGuildCreate() {
         this.client.on(Events.GuildCreate, async (guild) => {
             console.info(`Entered new guild: ${guild.id}`);
-            const slimGuild = { id: guild.id, name: guild.name };
-            await dbAddGuild(slimGuild);
+            const joinedGuild: JoinedGuild = {
+                id: guild.id,
+                name: guild.name,
+                birthdays: [],
+                settings: { birthdayResponseChannel: undefined }
+            };
+            await dbCreateOrUpdateGuild(joinedGuild);
         });
     }
 
