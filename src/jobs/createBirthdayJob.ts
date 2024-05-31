@@ -19,9 +19,13 @@ export const createBirthdayJob = (guildId: string, birthday: Birthday): CronJobD
                 const channel = await this.client.channels
                     .fetch(channelId)
                     .catch(console.error);
-                channel.send(\`<@${birthday.id}> gets ${calculateAge(birthday.date)} today 🎂 Happy Birthday 🥳\`);
+                channel.send(
+                \`<@${birthday.id}> gets ${calculateAge(birthday.date)} today 🎂 Happy Birthday 🥳\`
+                );
             } else {
-                console.warn(\`guild ${guildId} did not specify a birthday channel but added a birthday.\`);
+                console.warn(
+                \`guild ${guildId} did not specify a birthday channel but added a birthday.\`
+                );
             }
         }
         `

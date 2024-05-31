@@ -15,7 +15,10 @@ export const dbAddBirthday = async (guildId: string, birthday: Birthday) => {
     await dbCreateOrUpdateGuild(guild);
 };
 
-export const dbGetBirthdayOfUser = async (guildId: string, userId: string): Promise<Birthday | undefined> => {
+export const dbGetBirthdayOfUser = async (
+    guildId: string,
+    userId: string
+): Promise<Birthday | undefined> => {
     const guild = await dbGetGuild(guildId);
     return guild.birthdays.find(bday => bday.id === userId);
 };

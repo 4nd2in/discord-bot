@@ -8,64 +8,71 @@ import {
     SlashCommandBuilder
 } from "discord.js";
 import { bot } from "..";
-import { dbAddBirthday, dbDeleteBirthdayOfUser, dbGetBirthdayOfUser, dbGetBirthdaysOfGuild, dbSetBirthdayResponseChannel } from "../db/helper/birthdaysHelper";
+import {
+    dbAddBirthday,
+    dbDeleteBirthdayOfUser,
+    dbGetBirthdayOfUser,
+    dbGetBirthdaysOfGuild,
+    dbSetBirthdayResponseChannel
+} from "../db/helper/birthdaysHelper";
 import { dbAddJob, dbDeleteJob } from "../db/helper/jobsHelper";
 import { Birthday } from "../interfaces/Birthday";
 import { Command } from "../interfaces/Command";
 import { createBirthdayJob } from "../jobs/createBirthdayJob";
+import { en } from "../locales/en";
 import { calculateAge } from "../utils/birthdayUtil";
 
 const birthday: Command = {
     data: new SlashCommandBuilder()
         .setName("birthday")
-        .setDescription("Handle birthdays")
+        .setDescription(en.handleBirthday)
         .addSubcommand(subcommand =>
             subcommand
                 .setName("set_channel")
-                .setDescription("Sets the channel to which notifications are being sent. If unset, no message will be sent.")
+                .setDescription(en.setChannelDesc)
                 .addChannelOption(option =>
                     option
                         .setName("channel")
-                        .setDescription("Channel to send congratulations to.")
+                        .setDescription(en.setChannelDesc)
                         .setRequired(true)
                 )
         )
         .addSubcommand(subcommand =>
             subcommand
                 .setName("add")
-                .setDescription("Adds a user to birthday list.")
+                .setDescription(en.birthdayAddDesc)
                 .addUserOption(option =>
                     option
                         .setName("user")
-                        .setDescription("User from whom you want to add the birthday.")
+                        .setDescription(en.birthdayAddUserDesc)
                         .setRequired(true)
                 )
                 .addStringOption(option =>
                     option
                         .setName("date")
-                        .setDescription("Date of birthday {YYYY-MM-DD}.")
+                        .setDescription(en.birthdayAddDateDesc)
                         .setRequired(true)
                 )
         )
         .addSubcommand(subcommand =>
             subcommand
                 .setName("show")
-                .setDescription("Displays a users birthday or all if no user is mentioned.")
+                .setDescription(en.birthdayShowDesc)
                 .addUserOption(option =>
                     option
                         .setName("user")
-                        .setDescription("User from whom you want to see the birthday.")
+                        .setDescription(en.birthdayShowUserDesc)
                         .setRequired(false)
                 )
         )
         .addSubcommand(subcommand =>
             subcommand
                 .setName("remove")
-                .setDescription("Removes a user from birthday list.")
+                .setDescription(en.birthdayRemoveDesc)
                 .addUserOption(option =>
                     option
                         .setName("user")
-                        .setDescription("User from whom you want to delete the birthday.")
+                        .setDescription(en.birthdayRemoveUserDesc)
                         .setRequired(true)
                 )
         ),
@@ -93,17 +100,17 @@ const handleSetChannel = async (
     const channel = options.getChannel("channel");
 
     if (!channel || channel.type != ChannelType.GuildText) {
-        await interaction.reply("Please enter a text channel").catch(console.error);
+        await interaction.reply(en.replyEnterChannel).catch(console.error);
         return;
     }
 
     if (!interaction.guildId) {
-        await interaction.reply("Could not find guild").catch(console.error);
+        await interaction.reply(en.replyNoGuild).catch(console.error);
         return;
     }
 
     await dbSetBirthdayResponseChannel(interaction.guildId, channel.id);
-    await interaction.reply(`Set <#${channel.id}> as birthday response channel`);
+    await interaction.reply(en.replySetChannel(channel.id));
 };
 
 const handleAdd = async (
@@ -114,17 +121,17 @@ const handleAdd = async (
     const date = options.getString("date");
 
     if (!date) {
-        await interaction.reply("Please enter a real date").catch(console.error);
+        await interaction.reply(en.replyDateInvalid).catch(console.error);
         return;
     }
 
     if (!user) {
-        await interaction.reply("Could not find user").catch(console.error);
+        await interaction.reply(en.replyNoUser).catch(console.error);
         return;
     }
 
     if (!interaction.guildId) {
-        await interaction.reply("Could not find guild").catch(console.error);
+        await interaction.reply(en.replyNoGuild).catch(console.error);
         return;
     }
 
@@ -142,12 +149,10 @@ const handleAdd = async (
         await dbAddJob(jobData);
         bot.startJob(jobData);
 
-        await interaction.reply(
-            `Added birthday for ${user.displayName}, age: ${age}`
-        ).catch(console.error);
+        await interaction.reply(en.replyBirthday(user.displayName, age)).catch(console.error);
     } catch (error) {
         console.error(error);
-        await interaction.reply("Please enter a real date").catch(console.error);
+        await interaction.reply(en.replyDateInvalid).catch(console.error);
     }
 };
 
@@ -158,7 +163,7 @@ const handleShow = async (
     const user = options.getUser("user");
 
     if (!interaction.guildId) {
-        await interaction.reply("Could not find guild").catch(console.error);
+        await interaction.reply(en.replyNoGuild).catch(console.error);
         return;
     }
 
@@ -166,20 +171,23 @@ const handleShow = async (
         const birthday = await dbGetBirthdayOfUser(interaction.guildId, user.id);
 
         if (!birthday) {
-            await interaction.reply(`Could not find birthday of ${user.displayName}`)
+            await interaction.reply(en.replyNoBirthday(user.displayName))
                 .catch(console.error);
             return;
         }
 
         await interaction
-            .reply(`Brithday of ${user.displayName} is ${birthday.date.toLocaleDateString()}. They are ${calculateAge(birthday.date)} years old 🎂`)
-            .catch(console.error)
-            ;
+            .reply(en.replyHappyBirthday(
+                user.displayName,
+                birthday.date.toLocaleDateString(),
+                calculateAge(birthday.date))
+            )
+            .catch(console.error);
     } else {
         const birthdays = await dbGetBirthdaysOfGuild(interaction.guildId);
 
         if (birthdays.length === 0) {
-            await interaction.reply("My database is currently empty :(").catch(console.error);
+            await interaction.reply(en.replyNoBirthdays).catch(console.error);
             return;
         }
 
@@ -190,7 +198,10 @@ const handleShow = async (
         const fields = birthdays.map(birthday => (
             {
                 name: `**${birthday.username}**`,
-                value: `Age: ${calculateAge(birthday.date)}, Birthday: ${birthday.date.toLocaleDateString()}`,
+                value: en.birthdayInfo(
+                    calculateAge(birthday.date),
+                    birthday.date.toLocaleDateString())
+                ,
                 inline: false
             }
         ));
@@ -207,19 +218,19 @@ const handleRemove = async (
 ) => {
     const user = options.getUser("user");
     if (!user) {
-        await interaction.reply("Could not find user").catch(console.error);
+        await interaction.reply(en.replyNoUser).catch(console.error);
         return;
     }
 
     if (!interaction.guildId) {
-        await interaction.reply("Could not find guild").catch(console.error);
+        await interaction.reply(en.replyNoGuild).catch(console.error);
         return;
     }
 
     await dbDeleteBirthdayOfUser(interaction.guildId, user.id);
     await bot.stopJob(user.id);
     await dbDeleteJob(user.id);
-    await interaction.reply(`Removed ${user.displayName} from birthday list.`)
+    await interaction.reply(en.replyRemoveBirthday(user.displayName))
         .catch(console.error);
 };
 

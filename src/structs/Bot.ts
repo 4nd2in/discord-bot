@@ -38,9 +38,8 @@ export class Bot {
         const job = CronJob.from({
             cronTime: jobData.cronTime,
             onTick: eval(jobData.onTick),
-            start: false
+            start: true
         });
-        job.start();
         this.activeJobsMap.set(jobData.id, job);
         console.debug(`Started job ${jobData.id} running: ${job.running}`);
     }

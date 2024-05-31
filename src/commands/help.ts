@@ -8,15 +8,15 @@ import {
 } from "discord.js";
 import { bot } from "..";
 import { Command } from "../interfaces/Command";
+import { en } from "../locales/en";
 
 const help: Command = {
     data: new SlashCommandBuilder()
         .setName("help")
-        .setDescription("Shows the description of all commands"),
+        .setDescription(en.helpDesc),
     run: async (interaction: CommandInteraction<CacheType>) => {
         const helpResponse = new EmbedBuilder()
-            .setTitle("Command List")
-            .setDescription("Description of all commands")
+            .setTitle(en.commandList)
             .setColor("#00FF00");
 
         const fields = bot.slashCommands
